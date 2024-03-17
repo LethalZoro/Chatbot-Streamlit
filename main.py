@@ -25,10 +25,10 @@ def chat_bot(message, thread):
     runs_list = client.beta.threads.runs.list(thread_id=thread.id).data
 
     if runs_list:  # Check if the list is not empty
-        last_run = runs_list[0]
+        last_run = runs_list[-1]
 
-        # Wait for the last run to complete before starting a new one
-        while last_run.status in ['queued', 'in_progress', 'cancelling']:
+        # Wait for the last run to complete before starting a new one in ['queued', 'in_progress', 'cancelling']
+        while last_run.status not in 'completed':
             time.sleep(1)
             last_run = client.beta.threads.runs.retrieve(
                 thread_id=thread.id,
@@ -45,8 +45,9 @@ def chat_bot(message, thread):
         thread_id=thread.id,
         assistant_id=ASSISTANT_ID
     )
+
     print(f"Run created: {run.id}")
-    while run.status in ['queued', 'in_progress', 'cancelling']:
+    while run.status not in 'completed':
         time.sleep(1)
         run = client.beta.threads.runs.retrieve(
             thread_id=thread.id,
@@ -60,9 +61,13 @@ def chat_bot(message, thread):
         chat_history = client.beta.threads.messages.list(
             thread_id=thread.id
         )
-    latest_message = chat_history.data[0]
-    # print(latest_message.content[0].text.value)
-    response = latest_message.content[0].text.value
+    else:
+        chat_history = None
+    if chat_history is not None:
+        latest_message = chat_history.data[0]
+        response = latest_message.content[0].text.value
+    else:
+        response = "Run not completed yet"
     return response
 
 
@@ -74,11 +79,18 @@ def response(chat_area):
         st.session_state.responses[-1])
 
 
+def clear_input():
+    st.session_state.my_text = st.session_state.input
+    st.session_state.input = ""
+
+
 def main():
     if "thread" not in st.session_state:
         st.session_state.thread = client.beta.threads.create()
     if "responses" not in st.session_state:
         st.session_state.responses = [""]
+    if "my_text" not in st.session_state:
+        st.session_state.my_text = ""
     # create some empty next lines
     st.markdown("***")
     st.markdown("<h4 style='text-align: left; color: white;'>ChatBot:</h4>",
@@ -100,18 +112,21 @@ def main():
     col1, col2 = st.columns([10, 2])
 
     with col1:
+
         user_input = st.text_area(
-            "You: ", "", key="input", height=80, on_change=None)
+            "You: ", "", key="input", height=80, on_change=clear_input)
         # st.text("")
         # submit_button = st.button('Submit') submit_button or
 
     with col2:
-        button = st.button("Enter", use_container_width=True)
-    if button or user_input != "":
+        button = st.button("Enter", use_container_width=True,
+                           on_click=clear_input)
+    if button or st.session_state.my_text != "":
         # response = chat_bot(user_input)
         st.session_state.responses.append(
-            chat_bot(st.session_state.input, st.session_state.thread))
+            chat_bot(st.session_state.my_text, st.session_state.thread))
         response(chat_area)
+
     styl = f"""
     <style>
         body {{
