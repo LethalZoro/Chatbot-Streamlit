@@ -2,7 +2,7 @@ import streamlit as st
 import time
 from openai import OpenAI
 
-client = OpenAI(api_key=API_KEY)
+client = OpenAI(api_key=st.secrets["API_KEY"])
 # ASSISTANT_ID ="asst_fWfbAUgTBe0FbftmfNGXRueb"
 ASSISTANT_ID = "asst_fWfbAUgTBe0FbftmfNGXRueb"
 st. set_page_config(page_title="ChatBot",
