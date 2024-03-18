@@ -6,7 +6,7 @@ client = OpenAI(api_key=st.secrets["API_KEY"])
 # ASSISTANT_ID ="asst_fWfbAUgTBe0FbftmfNGXRueb"
 ASSISTANT_ID = "asst_fWfbAUgTBe0FbftmfNGXRueb"
 st. set_page_config(page_title="ChatBot",
-                    page_icon="icon.png", layout="centered")
+                    page_icon="icon.png", layout="centered", menu_items={"Get help": None, "Report a bug": None, "About": None})
 
 
 # "st.session_state object:", st.session_state
@@ -16,8 +16,8 @@ st.markdown(
 st.markdown("<h2 style='text-align: center; color: white;'>Personal ChatBot</h2>",
             unsafe_allow_html=True)
 
-if "temp" not in st.session_state:
-    st.session_state.temp = [""]
+if "run_status" not in st.session_state:
+    st.session_state.run_status = [""]
 
 
 def chat_bot(message, thread):
@@ -56,7 +56,7 @@ def chat_bot(message, thread):
         print(f"Run status: {run.status}")
     else:
         print(f"Run status: {run.status}")
-    st.session_state.temp.append(run.status)
+    st.session_state.run_status.append(run.status)
     if run.status == 'completed':
         chat_history = client.beta.threads.messages.list(
             thread_id=thread.id
@@ -81,6 +81,7 @@ def response(chat_area):
 
 def clear_input():
     st.session_state.my_text = st.session_state.input
+    st.session_state.user.append(st.session_state.input)
     st.session_state.input = ""
 
 
@@ -88,9 +89,11 @@ def main():
     if "thread" not in st.session_state:
         st.session_state.thread = client.beta.threads.create()
     if "responses" not in st.session_state:
-        st.session_state.responses = [""]
+        st.session_state.responses = []
     if "my_text" not in st.session_state:
         st.session_state.my_text = ""
+    if "user" not in st.session_state:
+        st.session_state.user = []
     # create some empty next lines
     st.markdown("***")
     st.markdown("<h4 style='text-align: left; color: white;'>ChatBot:</h4>",
