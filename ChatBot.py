@@ -124,10 +124,11 @@ def main():
     with col2:
         button = st.button("Enter", use_container_width=True,
                            on_click=clear_input)
-    if button or st.session_state.my_text != "":
+    if (button or st.session_state.my_text != ""):
         # response = chat_bot(user_input)
-        st.session_state.responses.append(
-            chat_bot(st.session_state.my_text, st.session_state.thread))
+        if (st.session_state.my_text == st.session_state.user[-1]) and (st.session_state.user[-1] != None):
+            st.session_state.responses.append(
+                chat_bot(st.session_state.my_text, st.session_state.thread))
         response(chat_area)
 
     styl = f"""
